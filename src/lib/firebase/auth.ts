@@ -24,7 +24,7 @@ export async function registerUser(
     uid: credential.user.uid,
     email: credential.user.email!,
     displayName,
-    photoURL: credential.user.photoURL || undefined,
+    photoURL: credential.user.photoURL || null,
     role: 'student',
     createdAt: serverTimestamp() as Timestamp,
     lastLogin: serverTimestamp() as Timestamp,
