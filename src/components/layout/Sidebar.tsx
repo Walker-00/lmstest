@@ -23,7 +23,6 @@ import {
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/courses', label: 'Courses', icon: BookOpen },
-  { href: '/admin/lessons', label: 'Lessons', icon: FileText },
   { href: '/admin/quizzes', label: 'Quizzes', icon: HelpCircle },
   { href: '/admin/students', label: 'Students', icon: Users },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

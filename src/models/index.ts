@@ -6,7 +6,7 @@ export interface AppUser {
   uid: string
   email: string
   displayName: string
-  photoURL?: string
+  photoURL?: string | null
   role: UserRole
   createdAt: Timestamp
   lastLogin: Timestamp
