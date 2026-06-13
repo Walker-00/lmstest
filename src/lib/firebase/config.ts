@@ -14,6 +14,20 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
+const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'] as const
+const missingKeys = requiredKeys.filter((k) => !firebaseConfig[k])
+
+export function isFirebaseConfigured(): boolean {
+  return missingKeys.length === 0
+}
+
+if (!isFirebaseConfigured() && typeof window !== 'undefined') {
+  console.warn(
+    `Firebase is not configured. Missing env vars: ${missingKeys.join(', ')}\n` +
+      'Set NEXT_PUBLIC_FIREBASE_* in .env.local or Vercel Dashboard.'
+  )
+}
+
 let app: FirebaseApp
 let auth: Auth
 let db: Firestore
@@ -23,8 +37,15 @@ let analytics: Analytics | null = null
 const isDev = process.env.NODE_ENV === 'development'
 
 export function initFirebase() {
+  if (!isFirebaseConfigured()) {
+    throw new Error(
+      `Firebase not configured. Missing: ${missingKeys.join(', ')}. ` +
+        'Set NEXT_PUBLIC_FIREBASE_* environment variables.'
+    )
+  }
+
   if (!getApps().length) {
-    app = initializeApp(firebaseConfig)
+    app = initializeApp(firebaseConfig as Record<string, string>)
     auth = getAuth(app)
     db = getFirestore(app)
     storage = getStorage(app)
