@@ -1,0 +1,59 @@
+rules_version = '2'
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isImage(contentType) {
+      return contentType.matches('image/.*');
+    }
+
+    // Course thumbnails — images only, max 5MB, admin write, anyone read
+    match /thumbnails/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && request.resource.size < 5 * 1024 * 1024
+        && isImage(request.resource.contentType);
+      allow delete: if isAdmin();
+    }
+
+    // Lesson materials — max 50MB, admin write, enrolled users read
+    match /materials/{courseId}/{fileName} {
+      allow read: if isAuthenticated()
+        && (
+          isAdmin()
+          || firestore.exists(
+            /databases/(default)/documents/enrollments/$(request.auth.uid + '_' + courseId)
+          )
+        );
+      allow write: if isAdmin()
+        && request.resource.size < 50 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+
+    // User avatars — images only, max 2MB, owner write, anyone read
+    match /avatars/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.size < 2 * 1024 * 1024
+        && isImage(request.resource.contentType);
+      allow delete: if isAuthenticated()
+        && request.auth.uid == userId;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
