@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { getDoc, doc, updateDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
+import { getDoc, doc, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import { Course, Lesson } from '@/models'
 import { ArrowLeft, Plus, BookOpen, Trash2, Edit, Video } from 'lucide-react'
@@ -48,14 +48,13 @@ export default function EditCoursePage() {
 
   async function loadCourse() {
     try {
-      const [courseSnap, lessonsSnap] = await Promise.all([
-        getDoc(doc(db, 'courses', courseId)),
-        getDocs(query(collection(db, 'lessons'), where('courseId', '==', courseId), where('__name__', '!=', ''))),
-      ])
+      const courseSnap = await getDoc(doc(db, 'courses', courseId))
       if (!courseSnap.exists()) { router.push('/admin/courses'); return }
+
       const data = { id: courseSnap.id, ...courseSnap.data() } as Course & { id: string }
       setCourse(data)
       setForm({ title: data.title, description: data.description, category: data.category, difficulty: data.difficulty, tags: data.tags?.join(', ') || '' })
+
       const allLessons = await getDocs(query(collection(db, 'lessons'), where('courseId', '==', courseId)))
       setLessons(allLessons.docs.map(d => ({ id: d.id, ...d.data() } as Lesson & { id: string })).sort((a, b) => a.order - b.order))
     } catch (err) {

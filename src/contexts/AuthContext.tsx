@@ -44,12 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const unsubscribe = onAuthChange(async (firebaseUser) => {
         setUser(firebaseUser)
         if (firebaseUser) {
+          setLoading(true)
           const data = await getUserData(firebaseUser.uid)
           setUserData(data)
+          setLoading(false)
         } else {
           setUserData(null)
+          setLoading(false)
         }
-        setLoading(false)
       })
       return unsubscribe
     } catch (err) {
