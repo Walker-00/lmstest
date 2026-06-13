@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { useAuth } from '@/contexts/AuthContext'
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '@/lib/firebase/config'
+import { db } from '@/lib/firebase/config'
+import { uploadToCloudinary } from '@/lib/cloudinary'
 import { extractYouTubeVideoId, fetchYouTubeMetadata } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { Youtube, Link as LinkIcon, Upload, X } from 'lucide-react'
@@ -69,10 +69,13 @@ export default function NewLessonPage() {
     try {
       const attachmentData = []
       for (const att of attachments) {
-        const storageRef = ref(storage, `materials/${courseId}/${Date.now()}_${att.name}`)
-        const snap = await uploadBytes(storageRef, att.file)
-        const url = await getDownloadURL(snap.ref)
-        attachmentData.push({ name: att.name, url, type: att.file.type, size: att.file.size })
+        const result = await uploadToCloudinary(att.file, `materials/${courseId}`)
+        attachmentData.push({
+          name: att.name,
+          url: result.secure_url,
+          type: att.file.type || 'application/octet-stream',
+          size: att.file.size,
+        })
       }
 
       await addDoc(collection(db, 'lessons'), {

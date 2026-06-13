@@ -9,8 +9,8 @@ import { Select } from '@/components/ui/Select'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { useAuth } from '@/contexts/AuthContext'
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '@/lib/firebase/config'
+import { db } from '@/lib/firebase/config'
+import { uploadToCloudinary } from '@/lib/cloudinary'
 import { CourseCategory, CourseDifficulty } from '@/models'
 import toast from 'react-hot-toast'
 
@@ -60,9 +60,8 @@ export default function NewCoursePage() {
     try {
       let thumbnailUrl = ''
       if (thumbnailFile) {
-        const storageRef = ref(storage, `thumbnails/${user!.uid}/${Date.now()}_${thumbnailFile.name}`)
-        const snap = await uploadBytes(storageRef, thumbnailFile)
-        thumbnailUrl = await getDownloadURL(snap.ref)
+        const result = await uploadToCloudinary(thumbnailFile, `thumbnails/${user!.uid}`)
+        thumbnailUrl = result.secure_url
       }
 
       const courseData = {
